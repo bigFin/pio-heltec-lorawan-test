@@ -29,95 +29,19 @@
 #include "LoRaWan_APP.h"
 #include <Wire.h>  
 
-/*LoraWan channelsmask, default channels 0-7*/ 
-uint16_t userChannelsMask[6]={ 0x00FF,0x0000,0x0000,0x0000,0x0000,0x0000 };
-
 
 /*license for Heltec ESP32 LoRaWan, quary your ChipID relevant license: http://resource.heltec.cn/search */
 uint32_t  license[4] = {0x265DC2F7, 0xFFC495D5, 0x39444708, 0xBB67E009};
 //0x265DC2F7,0xFFC495D5,0x39444708,0xBB67E009
 /* OTAA para*/
-uint8_t devEui[] = { 0x60, 0x81, 0xF9, 0x1D, 0x20, 0xBD, 0x8F, 0x5B };
-uint8_t appEui[] = { 0x60, 0x81, 0xF9, 0xA1, 0x5D, 0x9B, 0x4F, 0x3A };
-uint8_t appKey[] = { 0x68, 0x90, 0xFF, 0x33, 0x5A, 0xE8, 0xCC, 0x59, 0xFA, 0xE1, 0x1C, 0xBF, 0xFD, 0xBE, 0xC5, 0xFF };
+uint8_t DevEui[] = { 0x60, 0x81, 0xF9, 0x1D, 0x20, 0xBD, 0x8F, 0x5B };
+uint8_t AppEui[] = { 0x60, 0x81, 0xF9, 0xA1, 0x5D, 0x9B, 0x4F, 0x3A };
+uint8_t AppKey[] = { 0x68, 0x90, 0xFF, 0x33, 0x5A, 0xE8, 0xCC, 0x59, 0xFA, 0xE1, 0x1C, 0xBF, 0xFD, 0xBE, 0xC5, 0xFF };
 
 /* ABP para*/
-uint8_t nwkSKey[] = { 0x15, 0xb1, 0xd0, 0xef, 0xa4, 0x63, 0xdf, 0xbe, 0x3d, 0x11, 0x18, 0x1e, 0x1e, 0xc7, 0xda,0x85 };
-uint8_t appSKey[] = { 0xd7, 0x2c, 0x78, 0x75, 0x8c, 0xdc, 0xca, 0xbf, 0x55, 0xee, 0x4a, 0x77, 0x8d, 0x16, 0xef,0x67 };
-uint32_t devAddr =  ( uint32_t )0x007e6ae1;
-
-/*OTAA or ABP*/
-bool overTheAirActivation = modeLoraWan;
-
-/*ADR enable*/
-bool loraWanAdr = loraWanAdr;
-//#define LORAWAN_NET_RESERVE on
-/* set LORAWAN_Net_Reserve ON, the node could save the network info to flash, when node reset not need to join again */
-bool keepNet = false;
-
-/* Indicates if the node is sending confirmed or unconfirmed messages LORAWAN_UPLINKMODE */
-bool isTxConfirmed = false;
-
-/*the application data transmission duty cycle.  value in [ms].*/
-uint32_t appTxDutyCycle = 15000;
-
-/* Application port */
-uint8_t appPort = 2;
-/*!
-* Number of trials to transmit the frame, if the LoRaMAC layer did not
-* receive an acknowledgment. The MAC performs a datarate adaptation,
-* according to the LoRaWAN Specification V1.0.2, chapter 18.4, according
-* to the following table:
-*
-* Transmission nb | Data Rate
-* ----------------|-----------
-* 1 (first)       | DR
-* 2               | DR
-* 3               | max(DR-1,0)
-* 4               | max(DR-1,0)
-* 5               | max(DR-2,0)
-* 6               | max(DR-2,0)
-* 7               | max(DR-3,0)
-* 8               | max(DR-3,0)
-*
-* Note, that if NbTrials is set to 1 or 2, the MAC will not decrease
-* the datarate, in case the LoRaMAC layer did not receive an acknowledgment
-*/
-uint8_t confirmedNbTrials = 4;
-
-// This variable, defined in the runtime, tracks the number of uplinks sent.
-// When this count reaches 65,535 the connection must be re-established.
-// If you do not the device will continue to send data to the network but
-// it will not make it to the Helium console.
-// The value is tested below and a reconnection is forced if the counter
-//  equals 65534.
-// refer to FCnt on this documentation page:
-// https://developer.helium.com/longfi/mac-commands-fopts-adr
-extern uint32_t UpLinkCounter;
-
-/* Prepares the payload of the frame */
-static void prepareTxFrame( uint8_t port )
-{
-	/*appData size is LORAWAN_APP_DATA_MAX_SIZE which is defined in "commissioning.h".
-	*appDataSize max value is LORAWAN_APP_DATA_MAX_SIZE.
-	*if enabled AT, don't modify LORAWAN_APP_DATA_MAX_SIZE, it may cause system hanging or failure.
-	*if disabled AT, LORAWAN_APP_DATA_MAX_SIZE can be modified, the max value is reference to lorawan region and SF.
-	*for example, if use REGION_CN470, 
-	*the max value for different DR can be found in MaxPayloadOfDatarateCN470 refer to DataratesCN470 and BandwidthsCN470 in "RegionCN470.h".
-	*/
-    appDataSize = 4;
-    appData[0] = 0x00;
-    appData[1] = 0x01;
-    appData[2] = 0x02;
-    appData[3] = 0x03;
-}
-
-
-/*LoraWan region, select in arduino IDE tools*/
-LoRaMacRegion_t loraWanRegion = ACTIVE_REGION;
-
-/*LoraWan Class, Class A and Class C are supported*/
-DeviceClass_t  loraWanClass = CLASS_A;
+uint8_t NwkSKey[] = { 0x15, 0xb1, 0xd0, 0xef, 0xa4, 0x63, 0xdf, 0xbe, 0x3d, 0x11, 0x18, 0x1e, 0x1e, 0xc7, 0xda,0x85 };
+uint8_t AppSKey[] = { 0xd7, 0x2c, 0x78, 0x75, 0x8c, 0xdc, 0xca, 0xbf, 0x55, 0xee, 0x4a, 0x77, 0x8d, 0x16, 0xef,0x67 };
+uint32_t DevAddr =  ( uint32_t )0x007e6ae1;
 
 /********************************* lora  *********************************************/
 #define RF_FREQUENCY                                868000000 // Hz
@@ -228,17 +152,6 @@ void lora_init(void)
                                  LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
                                  0, true, 0, 0, LORA_IQ_INVERSION_ON, true );
 	state=STATE_TX;
-}
-
-void setupLora(){
-		//boardInitMcu();
-		Mcu.begin();
-	Serial.begin(115200);
-#if(AT_SUPPORT)
-	enableAt();
-#endif
-	deviceState = DEVICE_STATE_INIT;
-	//LoRaWAN.ifskipjoin();
 }
 
 
@@ -354,7 +267,6 @@ void VextOFF(void) //Vext default OFF
 }
 void setup()
 {
-/*
 	Serial.begin(115200);
 	VextON();
 	delay(100);
@@ -376,85 +288,11 @@ void setup()
 	packet ="waiting lora data!";
 	pinMode(LED ,OUTPUT);
 	digitalWrite(LED, LOW);  
-	*/
-setupLora();
-}
-
-void loopHelium(){
-
-	switch( deviceState )
-	{
-		case DEVICE_STATE_INIT:
-		{
-#if(AT_SUPPORT)
-			getDevParam();
-#endif
-			//LoRaWAN.printDevParam();
-			LoRaWAN.init(loraWanClass,loraWanRegion);
-			deviceState = DEVICE_STATE_JOIN;
-
-			// This is a runtime API that is in the Heltec github
-			// but has not yet made it to the Arduino install
-			// version. (1.0.0) It's here for future reference
-			// LoRaWAN.setDataRateForNoADR(DR_3);
-
-			break;
-		}
-		case DEVICE_STATE_JOIN:
-		{
-			LoRaWAN.join();
-			break;
-		}
-		case DEVICE_STATE_SEND:
-		{
-			// Comment out this warning if you "really" do want
-			// to enable ADR
-			if (loraWanAdr == true)
-			{
-				Serial.println(">>>> WARNING: ADR is enabled.\n\tThis may reduce the datarate/Spreading Factor after about 100 uplinks");
-			}
- 
-			prepareTxFrame( appPort );
-			LoRaWAN.send();
-			deviceState = DEVICE_STATE_CYCLE;
-			// the following is experimental but does seem to
-			// re-initialize the connection correctly. See the note
-			// at extern UpLinkCounter above
-			if (UpLinkCounter == 65534)
-			{
-				// force a rejoin
-				deviceState = DEVICE_STATE_INIT;
-			}
-			break;
-		}
-		case DEVICE_STATE_CYCLE:
-		{
-			// Schedule next packet transmission
-			txDutyCycleTime = appTxDutyCycle + randr( 0, APP_TX_DUTYCYCLE_RND );
-			LoRaWAN.cycle(txDutyCycleTime);
-			deviceState = DEVICE_STATE_SLEEP;
-			break;
-		}
-		case DEVICE_STATE_SLEEP:
-		{
-			LoRaWAN.sleep(loraWanClass);
-			break;
-		}
-		default:
-		{
-			deviceState = DEVICE_STATE_INIT;
-			break;
-		}
-	}
 }
 
 
 void loop()
 {
-	loopHelium();
-
-	/*
-	
 interrupt_handle();
  if(deepsleepflag)
  {
@@ -522,5 +360,4 @@ switch(state)
     default:
       break;
   }
-  */
 }
